@@ -154,6 +154,32 @@ Then open:
 - `http://localhost:3000/event-types` — admin dashboard
 - `http://localhost:3000/lakshya/30min` — public booking page for the seeded user
 
+### 5. Tests
+
+The API has a 60-test Vitest suite split into three tiers — unit / module / integration:
+
+```bash
+npm test                      # run everything (~5 s)
+npm run test:unit             # pure functions only, no DB
+npm run test:module           # touches Postgres (services + Prisma)
+npm run test:integration      # boots Express via supertest, hits real DB
+```
+
+Module + integration tests use the same Docker Postgres your dev server points at, and
+TRUNCATE rows between cases — they refuse to run against a managed DB host (Neon, RDS,
+Supabase, Render, Railway, Fly) as a safety guard.
+
+What's covered:
+- **Unit (27 tests)** — timezone math (`dateAtMinuteInTz`, `eachDateInRange`), slug
+  derivation (unicode, emoji, collisions), and the interval-subtraction algorithm
+  that powers slot computation.
+- **Module (17 tests)** — `getAvailableSlots()` against real data including date overrides
+  and buffer time; `createBooking()` / `cancelBooking()` / `rescheduleBooking()` including
+  a 5-way concurrency race that asserts exactly one booking wins.
+- **Integration (16 tests)** — the Express app via supertest: every route, validation
+  errors, slug-immutability, hidden-event semantics, and regression coverage for the
+  duplicate-cards-in-Cancelled-tab bug.
+
 ---
 
 ## Database

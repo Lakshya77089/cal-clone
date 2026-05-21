@@ -1,17 +1,20 @@
 import { prisma } from "../db";
 
-/** Turn a title into a URL-safe slug: "Coffee Chat ☕" → "coffee-chat". */
+/** Turn a title into a URL-safe slug: "Café Chat ☕" → "cafe-chat". */
 export function slugifyTitle(title: string): string {
   const slug = title
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "") // strip combining marks
-    .replace(/[^a-z0-9\s-]/g, "") // drop everything that isn't alnum/space/hyphen
+    // Strip combining diacritical marks (the "´" in "é" after NFKD).
+    // Using \u escapes so the regex survives any editor's encoding.
+    .replace(/[̀-ͯ]/g, "")
+    // Drop anything that isn't ASCII letters, digits, spaces, or hyphens.
+    .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .slice(0, 60);
-  // Guard against an empty result (e.g. emoji-only titles).
+  // Guard against an empty result (e.g. emoji-only titles, all-symbol titles).
   return slug || "event";
 }
 
