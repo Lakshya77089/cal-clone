@@ -13,7 +13,8 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch --preserveWatchOutput"
+    "dev": "tsc --watch --preserveWatchOutput",
+    "prepare": "tsc"
   },
   "dependencies": {
     "zod": "^3.23.8"
