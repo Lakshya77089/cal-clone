@@ -4,6 +4,19 @@ A working clone of [cal.com](https://cal.com) built for the SDE Intern Fullstack
 Lets a single host manage event types, configure availability schedules (with date
 overrides), share a public booking link, and view/cancel/reschedule bookings.
 
+## Live demo
+
+- **Web app:** https://cal-clone-web-green.vercel.app
+- **API:** https://cal-clone-api-tvdo.onrender.com — try [`/health`](https://cal-clone-api-tvdo.onrender.com/health) to verify the backend is reachable.
+- **GitHub:** https://github.com/Lakshya77089/cal-clone
+
+To find a working public booking link, hit [`/me`](https://cal-clone-api-tvdo.onrender.com/me)
+and grab the `username` field, then visit `https://cal-clone-web-green.vercel.app/<username>`
+for the host's public profile page, or `…/<username>/30min` to land directly on a booking page.
+
+> **Cold-start note:** the Render free tier sleeps after 15 min of inactivity, so the
+> first request after a long idle can take ~30 s to wake the API. Subsequent requests are fast.
+
 ---
 
 ## Tech stack
