@@ -36,7 +36,10 @@ router.get("/", async (req, res, next) => {
       where.startTime = { lt: now };
       orderBy = "desc";
     } else if (scope === "cancelled") {
-      where.status = { in: ["CANCELLED", "RESCHEDULED"] };
+      // Only true cancellations show here. RESCHEDULED rows are an internal
+      // audit trail (their replacement is the live booking) and would otherwise
+      // create duplicate cards when a rescheduled booking is later cancelled.
+      where.status = "CANCELLED";
       orderBy = "desc";
     }
 
