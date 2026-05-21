@@ -1,0 +1,127 @@
+// Prisma schema for the Cal.com clone.
+//
+// Design notes (see /README.md and the architecture plan for trade-offs):
+//   * Availability is modeled as (weekday, startMinute, endMinute) rows.
+//     A "minute of day" is an integer 0..1439 in the schedule's own timezone.
+//     This avoids storing timezone-naive TIME values, which become ambiguous
+//     across DST boundaries.
+//   * Bookings store UTC TIMESTAMPTZ; rendering in any viewer timezone is
+//     a presentation concern.
+//   * Cancellations are soft (status=CANCELLED + cancelledAt) so past
+//     bookings remain queryable and slots become re-bookable.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  username        String   @unique
+  timezoneDefault String   @default("UTC")
+  createdAt       DateTime @default(now())
+
+  eventTypes EventType[]
+  schedules  Schedule[]
+}
+
+model EventType {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  slug            String
+  description     String?
+  durationMinutes Int
+  scheduleId      String
+  bufferBefore    Int      @default(0)
+  bufferAfter     Int      @default(0)
+  // `hidden=true` means the event is not listed on the host's public profile,
+  // but the direct booking link still works ("secret event type" semantics,
+  // matching cal.com). Default false = listed.
+  hidden          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schedule Schedule  @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  bookings Booking[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  timezone  String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rules      AvailabilityRule[]
+  overrides  DateOverride[]
+  eventTypes EventType[]
+
+  @@index([userId])
+}
+
+model AvailabilityRule {
+  id          String @id @default(cuid())
+  scheduleId  String
+  weekday     Int // 0 = Sunday .. 6 = Saturday (matches JS Date.getDay())
+  startMinute Int // minutes since midnight in schedule.timezone
+  endMinute   Int
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId, weekday])
+}
+
+model DateOverride {
+  id          String   @id @default(cuid())
+  scheduleId  String
+  date        DateTime @db.Date // stored as date-only
+  startMinute Int? // null,null = full-day block
+  endMinute   Int?
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduleId, date])
+  @@index([scheduleId])
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  RESCHEDULED
+}
+
+model Booking {
+  id               String        @id @default(cuid())
+  eventTypeId      String
+  attendeeName     String
+  attendeeEmail    String
+  attendeeNotes    String?
+  attendeeTimezone String
+  startTime        DateTime      @db.Timestamptz(6)
+  endTime          DateTime      @db.Timestamptz(6)
+  status           BookingStatus @default(CONFIRMED)
+  createdAt        DateTime      @default(now())
+  cancelledAt      DateTime?
+  cancelReason     String?
+  rescheduledToId  String?       @unique
+
+  eventType      EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  rescheduledTo  Booking?  @relation("Reschedule", fields: [rescheduledToId], references: [id])
+  rescheduledFrom Booking? @relation("Reschedule")
+
+  @@index([eventTypeId, startTime])
+  @@index([status, startTime])
+}
