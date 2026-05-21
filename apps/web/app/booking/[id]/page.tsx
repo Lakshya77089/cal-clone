@@ -25,7 +25,7 @@ export default async function BookingConfirmationPage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4 sm:p-8">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm">
         <div className="mb-4 flex justify-center">
           {isCancelled ? (
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">

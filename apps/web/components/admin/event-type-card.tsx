@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, Copy, ExternalLink, MoreVertical, Trash2 } from "lucide-react";
+import { Clock, Copy, EyeOff, ExternalLink, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,17 +82,29 @@ export function EventTypeCard({
 
   return (
     <div
-      className={`flex items-center gap-4 border-b border-border bg-white px-6 py-5 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-0 hover:bg-muted/40 ${hidden ? "opacity-60" : ""}`}
+      className={`flex items-center gap-4 border-b border-border bg-card px-6 py-5 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-0 hover:bg-muted/40 ${hidden ? "opacity-60" : ""}`}
     >
       <Link href={`/event-types/${eventType.id}`} className="min-w-0 flex-1">
-        <div className="flex items-center gap-3">
+        {/* Title + slug on the same line, mirroring cal.com's row layout */}
+        <div className="flex flex-wrap items-baseline gap-x-2">
           <h3 className="truncate text-base font-semibold">{eventType.title}</h3>
-          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+          <span className="truncate text-sm text-muted-foreground">
+            /{username}/{eventType.slug}
+          </span>
+        </div>
+        {/* Meta row: duration + (optional) Hidden badge, mirroring screenshot */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             {eventType.durationMinutes}m
           </span>
+          {hidden && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">
+              <EyeOff className="h-3 w-3" />
+              Hidden
+            </span>
+          )}
         </div>
-        <p className="mt-1 truncate text-sm text-muted-foreground">/{username}/{eventType.slug}</p>
         {eventType.description && (
           <p className="mt-1 truncate text-sm text-muted-foreground/80">{eventType.description}</p>
         )}

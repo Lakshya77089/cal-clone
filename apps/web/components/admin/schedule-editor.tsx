@@ -139,7 +139,7 @@ export function ScheduleEditor({ schedule }: { schedule: ScheduleDTO }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 rounded-lg border border-border bg-white p-6 sm:grid-cols-2">
+      <div className="grid gap-4 rounded-lg border border-border bg-card p-6 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">Schedule name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -150,7 +150,7 @@ export function ScheduleEditor({ schedule }: { schedule: ScheduleDTO }) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-white">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         {byDay.map((ranges, wd) => {
           const enabled = ranges.length > 0;
           return (
@@ -219,7 +219,7 @@ export function ScheduleEditor({ schedule }: { schedule: ScheduleDTO }) {
         })}
       </div>
 
-      <div className="rounded-lg border border-border bg-white">
+      <div className="rounded-lg border border-border bg-card">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
             <h3 className="text-sm font-semibold">Date overrides</h3>

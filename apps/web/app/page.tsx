@@ -14,7 +14,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-6">
-      <div className="w-full max-w-xl rounded-2xl border border-border bg-white p-10 shadow-sm">
+      <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-10 shadow-sm">
         <div className="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-foreground text-background">
           <CalendarClock className="h-5 w-5" />
         </div>

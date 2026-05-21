@@ -139,7 +139,7 @@ export function BookingPicker({
               if (isSelected) {
                 return (
                   <div key={iso} className="flex gap-2">
-                    <div className="flex-1 rounded-md border border-foreground bg-white py-2 text-center text-sm font-medium text-foreground">
+                    <div className="flex-1 rounded-md border border-foreground bg-card py-2 text-center text-sm font-medium text-foreground">
                       {label}
                     </div>
                     <Button
@@ -158,7 +158,7 @@ export function BookingPicker({
                   type="button"
                   key={iso}
                   onClick={() => setSelectedSlot(iso)}
-                  className="block w-full rounded-md border border-border bg-white py-2 text-center text-sm font-medium text-foreground transition-colors hover:border-foreground"
+                  className="block w-full rounded-md border border-border bg-card py-2 text-center text-sm font-medium text-foreground transition-colors hover:border-foreground"
                 >
                   {label}
                 </button>

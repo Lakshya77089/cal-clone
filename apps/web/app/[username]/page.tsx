@@ -28,7 +28,7 @@ export default async function PublicProfilePage({
     <main className="min-h-screen bg-muted/40">
       <div className="mx-auto max-w-3xl px-4 py-12">
         {/* Profile card */}
-        <div className="mb-8 overflow-hidden rounded-2xl border border-border bg-white p-8">
+        <div className="mb-8 overflow-hidden rounded-2xl border border-border bg-card p-8">
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-xl font-medium text-background">
               {initials}
@@ -42,11 +42,11 @@ export default async function PublicProfilePage({
 
         {/* Event-type list */}
         {eventTypes.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">
             This user hasn’t published any event types yet.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-border bg-white">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
             {eventTypes.map((et) => (
               <Link
                 key={et.id}

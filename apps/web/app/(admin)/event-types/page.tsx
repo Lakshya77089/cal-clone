@@ -15,7 +15,7 @@ export default async function EventTypesPage() {
     return (
       <div>
         <PageHeader title="Event Types" description="Couldn't reach the API." />
-        <div className="rounded-lg border border-border bg-white p-8 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
           Make sure the API is running on{" "}
           <code className="rounded bg-muted px-1 py-0.5">{process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}</code>{" "}
           and that you&rsquo;ve seeded the database with{" "}
@@ -40,14 +40,14 @@ export default async function EventTypesPage() {
       />
 
       {eventTypes.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-white p-12 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
           <p className="text-sm text-muted-foreground">No event types yet.</p>
           <Button asChild className="mt-4">
             <Link href="/event-types/new">Create your first</Link>
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-white">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
           {eventTypes.map((et) => (
             <EventTypeCard key={et.id} eventType={et} username={me.username} />
           ))}

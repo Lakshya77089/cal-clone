@@ -23,13 +23,13 @@ export default async function ReschedulePage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4 sm:p-8">
       <div className="w-full max-w-5xl">
-        <div className="mb-4 rounded-lg border border-border bg-white p-4 text-sm">
+        <div className="mb-4 rounded-lg border border-border bg-card p-4 text-sm">
           <p className="font-medium">Rescheduling: {booking.eventType.title}</p>
           <p className="text-muted-foreground">
             Originally scheduled with {booking.attendeeName} ({booking.attendeeEmail}). Pick a new time below.
           </p>
         </div>
-        <div className="grid w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-white shadow-sm md:grid-cols-[300px_1fr]">
+        <div className="grid w-full grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:grid-cols-[300px_1fr]">
           <RescheduleClient profile={profile} bookingId={booking.id} viewerTimezone={booking.attendeeTimezone} />
         </div>
       </div>

@@ -21,7 +21,7 @@ export default async function BookingsPage({
     return (
       <div>
         <PageHeader title="Bookings" />
-        <div className="rounded-lg border border-border bg-white p-8 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
           Couldn&rsquo;t load bookings. Is the API running?
         </div>
       </div>

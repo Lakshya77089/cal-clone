@@ -83,7 +83,7 @@ export function EventTypeForm({ mode, initial, schedules, username }: Props) {
       {/* Header bar: lives above the form card and mirrors cal.com's
           EventTypeSingleLayout header. The Hidden toggle is part of the same
           submit so it persists with one Save click. */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-white px-6 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-6 py-3">
         <div className="flex items-center gap-3">
           <Switch
             id="hidden"
@@ -110,7 +110,7 @@ export function EventTypeForm({ mode, initial, schedules, username }: Props) {
         </div>
       </div>
 
-      <div className="space-y-6 rounded-lg border border-border bg-white p-6">
+      <div className="space-y-6 rounded-lg border border-border bg-card p-6">
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input
@@ -183,7 +183,7 @@ export function EventTypeForm({ mode, initial, schedules, username }: Props) {
               className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
                 duration === m
                   ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-white text-foreground hover:bg-muted"
+                  : "border-border bg-card text-foreground hover:bg-muted"
               }`}
             >
               {m} min

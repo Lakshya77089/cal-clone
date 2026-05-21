@@ -53,7 +53,7 @@ export default function NewSchedulePage() {
       <PageHeader title="New schedule" description="Start with Mon-Fri 9-5; refine after creating." />
       <form
         onSubmit={onSubmit}
-        className="grid max-w-xl gap-4 rounded-lg border border-border bg-white p-6"
+        className="grid max-w-xl gap-4 rounded-lg border border-border bg-card p-6"
       >
         <div className="space-y-2">
           <Label htmlFor="name">Schedule name</Label>

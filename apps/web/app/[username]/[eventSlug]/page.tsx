@@ -23,7 +23,7 @@ export default async function PublicBookingPage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4 sm:p-8">
-      <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border border-border bg-white shadow-sm md:grid-cols-[300px_1fr]">
+      <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:grid-cols-[300px_1fr]">
         <EventInfo profile={profile} viewerTimezone={viewerTimezone} />
         <BookingPicker profile={profile} viewerTimezone={viewerTimezone} />
       </div>

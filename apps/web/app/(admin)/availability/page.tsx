@@ -12,7 +12,7 @@ export default async function AvailabilityListPage() {
     return (
       <div>
         <PageHeader title="Availability" />
-        <div className="rounded-lg border border-border bg-white p-8 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
           Couldn&rsquo;t load schedules. Is the API running?
         </div>
       </div>
@@ -34,14 +34,14 @@ export default async function AvailabilityListPage() {
       />
 
       {schedules.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-white p-12 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
           <p className="text-sm text-muted-foreground">No schedules yet.</p>
           <Button asChild className="mt-4">
             <Link href="/availability/new">Create one</Link>
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-white">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
           {schedules.map((s) => (
             <Link
               key={s.id}

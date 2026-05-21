@@ -53,7 +53,7 @@ export function BookingList({
 
   if (bookings.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border bg-white p-12 text-center">
+      <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
         <p className="text-sm text-muted-foreground">
           No {scope} bookings.
         </p>
@@ -82,7 +82,7 @@ export function BookingList({
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {formatInTimeZone(new Date(`${day}T12:00:00Z`), viewerTimezone, "EEEE, MMMM d")}
             </h2>
-            <div className="overflow-hidden rounded-lg border border-border bg-white">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
               {items.map((b) => (
                 <div
                   key={b.id}

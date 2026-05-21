@@ -2,26 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Permanently dark theme tuned to look like cal.com's dashboard:
+ *   - Background: near-black with the slight blue-grey tint cal.com uses
+ *   - Surfaces (cards, sidebar): a tone above the background
+ *   - Borders: subtle, low-contrast
+ *   - Primary action buttons: white on dark
+ */
+
 @layer base {
   :root {
-    /* Cal.com-style monochrome palette */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 6%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 6%;
-    --primary: 0 0% 6%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 6%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 6%;
-    --destructive: 0 84% 40%;
+    --background: 0 0% 4%;          /* page bg, ~#0A0A0A */
+    --foreground: 0 0% 96%;         /* primary text */
+    --card: 0 0% 7%;                /* surface bg, ~#121212 */
+    --card-foreground: 0 0% 96%;
+    --primary: 0 0% 100%;           /* primary button bg (white) */
+    --primary-foreground: 0 0% 6%;  /* primary button text (near-black) */
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 11%;              /* hover bg, input bg, badge bg */
+    --muted-foreground: 0 0% 60%;   /* secondary text */
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 6%;
+    --border: 0 0% 16%;             /* subtle dividers */
+    --input: 0 0% 16%;
+    --ring: 0 0% 80%;               /* focus ring */
     --radius: 0.5rem;
   }
 
@@ -31,5 +38,6 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    color-scheme: dark;
   }
 }
