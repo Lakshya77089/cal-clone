@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/admin/page-header";
+import { ScheduleListSkeleton } from "@/components/admin/list-skeleton";
 import { api, ApiError } from "@/lib/api";
 import type { ScheduleDTO } from "@cal/shared";
 
@@ -55,9 +56,7 @@ export function AvailabilityClient() {
       />
 
       {schedules === null ? (
-        <div className="rounded-lg border border-border bg-card p-12 text-center text-sm text-muted-foreground">
-          Loading…
-        </div>
+        <ScheduleListSkeleton />
       ) : schedules.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
           <p className="text-sm text-muted-foreground">No schedules yet.</p>

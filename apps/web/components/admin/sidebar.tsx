@@ -9,13 +9,13 @@ import {
   Clock,
   Copy,
   ExternalLink,
-  LayoutGrid,
+  Link as LinkIcon,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/event-types", label: "Event types", icon: LayoutGrid },
+  { href: "/event-types", label: "Event types", icon: LinkIcon },
   { href: "/bookings", label: "Bookings", icon: CalendarRange },
   { href: "/availability", label: "Availability", icon: Clock },
 ];

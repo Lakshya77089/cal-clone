@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/admin/page-header";
 import { BookingList } from "@/components/admin/booking-list";
+import { BookingListSkeleton } from "@/components/admin/list-skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, ApiError } from "@/lib/api";
 import type { BookingDTO } from "@cal/shared";
@@ -72,9 +73,7 @@ export function BookingsClient() {
         </TabsList>
         <TabsContent value={scope}>
           {bookings === null || viewerTimezone === null ? (
-            <div className="rounded-lg border border-border bg-card p-12 text-center text-sm text-muted-foreground">
-              Loading…
-            </div>
+            <BookingListSkeleton />
           ) : (
             <BookingList bookings={bookings} scope={scope} viewerTimezone={viewerTimezone} />
           )}

@@ -82,35 +82,35 @@ export function EventTypeCard({
 
   return (
     <div
-      className={`flex items-center gap-4 border-b border-border bg-card px-6 py-5 transition-colors first:rounded-t-lg last:rounded-b-lg last:border-0 hover:bg-muted/40 ${hidden ? "opacity-60" : ""}`}
+      className={`flex items-center gap-4 bg-card px-6 py-5 transition-colors hover:bg-muted/40 ${hidden ? "opacity-60" : ""}`}
     >
       <Link href={`/event-types/${eventType.id}`} className="min-w-0 flex-1">
-        {/* Title + slug on the same line, mirroring cal.com's row layout */}
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <h3 className="truncate text-base font-semibold">{eventType.title}</h3>
+          <h3 className="truncate text-sm font-semibold">{eventType.title}</h3>
           <span className="truncate text-sm text-muted-foreground">
             /{username}/{eventType.slug}
           </span>
         </div>
-        {/* Meta row: duration + (optional) Hidden badge, mirroring screenshot */}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+        {eventType.description && (
+          <p className="mt-1.5 line-clamp-1 text-sm text-muted-foreground">
+            {eventType.description}
+          </p>
+        )}
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
             <Clock className="h-3 w-3" />
             {eventType.durationMinutes}m
           </span>
           {hidden && (
-            <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-500">
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
               <EyeOff className="h-3 w-3" />
               Hidden
             </span>
           )}
         </div>
-        {eventType.description && (
-          <p className="mt-1 truncate text-sm text-muted-foreground/80">{eventType.description}</p>
-        )}
       </Link>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5">
         <Switch
           checked={!hidden}
           onCheckedChange={onToggleVisible}
@@ -118,36 +118,48 @@ export function EventTypeCard({
           title={hidden ? "Hidden from profile" : "Visible on profile"}
         />
 
-        <Button variant="secondary" size="icon" onClick={onCopy} title="Copy link">
-          <Copy className="h-4 w-4" />
-        </Button>
-
-        <Button variant="secondary" size="icon" asChild title="Preview">
-          <Link href={`/${username}/${eventType.slug}`} target="_blank">
-            <ExternalLink className="h-4 w-4" />
-          </Link>
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => router.push(`/event-types/${eventType.id}`)}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={onCopy}>Copy link</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => setConfirmDelete(true)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="ml-2 flex items-center rounded-md border border-border">
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            title="Preview"
+            className="h-9 w-9 rounded-none rounded-l-md border-r border-border"
+          >
+            <Link href={`/${username}/${eventType.slug}`} target="_blank">
+              <ExternalLink className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCopy}
+            title="Copy link"
+            className="h-9 w-9 rounded-none border-r border-border"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none rounded-r-md">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => router.push(`/event-types/${eventType.id}`)}>
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onCopy}>Copy link</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => setConfirmDelete(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>

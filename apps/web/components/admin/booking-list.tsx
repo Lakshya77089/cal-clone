@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { formatInTimeZone } from "date-fns-tz";
-import { Calendar, Clock, Mail, User as UserIcon } from "lucide-react";
+import { Calendar, CalendarRange, Clock, Mail, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,10 +52,15 @@ export function BookingList({
   };
 
   if (bookings.length === 0) {
+    const label = scope === "upcoming" ? "upcoming" : scope === "past" ? "past" : "cancelled";
     return (
-      <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
-        <p className="text-sm text-muted-foreground">
-          No {scope} bookings.
+      <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card px-6 py-16 text-center">
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+          <CalendarRange className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <h3 className="text-base font-semibold">No {label} bookings</h3>
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+          You have no {label} bookings. Your {label} bookings will show up here.
         </p>
       </div>
     );
