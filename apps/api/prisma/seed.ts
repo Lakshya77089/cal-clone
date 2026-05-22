@@ -20,7 +20,7 @@ async function main() {
   const username = `lakshya-${randomSuffix()}`;
   const user = await prisma.user.create({
     data: {
-      name: "Lakshya Singhal",
+      name: "Lakshya Sharma",
       email: "host@lakshyasharma.me",
       username,
       timezoneDefault: "Asia/Kolkata",
