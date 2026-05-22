@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 
-/** Turn a title into a URL-safe slug: "Café Chat ☕" → "cafe-chat". */
+/** Turn a title into a URL-safe slug: "Café Chat" → "cafe-chat". */
 export function slugifyTitle(title: string): string {
   const slug = title
     .toLowerCase()
