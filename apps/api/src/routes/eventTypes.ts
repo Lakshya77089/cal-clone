@@ -1,9 +1,10 @@
 import { Router } from "express";
+import { z } from "zod";
 import { CreateEventTypeSchema, UpdateEventTypeSchema } from "@cal/shared";
 import { prisma } from "../db";
 import { validateBody } from "../middleware/validate";
 import { getCurrentUser } from "../lib/currentUser";
-import { NotFound } from "../lib/errors";
+import { BadRequest, NotFound } from "../lib/errors";
 import { slugifyTitle, uniqueSlugForUser } from "../lib/slug";
 
 const router = Router();
@@ -13,9 +14,36 @@ router.get("/", async (_req, res, next) => {
     const user = await getCurrentUser();
     const list = await prisma.eventType.findMany({
       where: { userId: user.id },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
     });
     res.json(list);
+  } catch (e) {
+    next(e);
+  }
+});
+
+const ReorderSchema = z.object({ ids: z.array(z.string().min(1)).min(1) });
+
+router.post("/reorder", validateBody(ReorderSchema), async (req, res, next) => {
+  try {
+    const user = await getCurrentUser();
+    const ids: string[] = req.body.ids;
+
+    const owned = await prisma.eventType.findMany({
+      where: { userId: user.id, id: { in: ids } },
+      select: { id: true },
+    });
+    if (owned.length !== ids.length) {
+      throw BadRequest("Reorder list contains unknown event types");
+    }
+
+    await prisma.$transaction(
+      ids.map((id, i) =>
+        prisma.eventType.update({ where: { id }, data: { position: i } }),
+      ),
+    );
+
+    res.status(204).send();
   } catch (e) {
     next(e);
   }

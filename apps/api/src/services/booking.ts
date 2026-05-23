@@ -11,6 +11,21 @@ import {
 } from "./notifications";
 import type { CreateBookingInput } from "@cal/shared";
 
+function dedupedGuests(guests: string[] | undefined, attendee: string): string[] {
+  if (!guests || guests.length === 0) return [];
+  const lowerAttendee = attendee.toLowerCase();
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of guests) {
+    const v = raw.trim();
+    const key = v.toLowerCase();
+    if (!v || key === lowerAttendee || seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out;
+}
+
 /**
  * Create a booking with conflict prevention.
  *
@@ -73,6 +88,7 @@ export async function createBooking(input: CreateBookingInput) {
             attendeeEmail: input.attendeeEmail,
             attendeeNotes: input.attendeeNotes ?? null,
             attendeeTimezone: input.attendeeTimezone,
+            guests: dedupedGuests(input.guests, input.attendeeEmail),
             startTime: requestedStart,
             endTime: requestedEnd,
           },
@@ -118,7 +134,7 @@ export async function cancelBooking(id: string, reason?: string | null) {
  * one is created (otherwise the old booking would block the new time if the
  * attendee happens to want a slot that overlaps with their existing one).
  */
-export async function rescheduleBooking(id: string, newStartIso: string) {
+export async function rescheduleBooking(id: string, newStartIso: string, reason?: string | null) {
   const existing = await prisma.booking.findUnique({
     where: { id },
     include: { eventType: true },
@@ -159,6 +175,8 @@ export async function rescheduleBooking(id: string, newStartIso: string) {
             attendeeEmail: existing.attendeeEmail,
             attendeeNotes: existing.attendeeNotes,
             attendeeTimezone: existing.attendeeTimezone,
+            guests: existing.guests,
+            rescheduleReason: reason?.trim() || null,
             startTime: newStart,
             endTime: newEnd,
           },

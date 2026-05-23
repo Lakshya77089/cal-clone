@@ -81,10 +81,12 @@ export const CreateBookingSchema = z.object({
   attendeeEmail: z.string().email(),
   attendeeNotes: z.string().max(2000).optional().nullable(),
   attendeeTimezone: TimezoneSchema,
+  guests: z.array(z.string().email()).max(10).optional().default([]),
 });
 
 export const RescheduleBookingSchema = z.object({
   startTime: z.string().datetime(),
+  reason: z.string().max(2000).optional().nullable(),
 });
 
 export const CancelBookingSchema = z.object({

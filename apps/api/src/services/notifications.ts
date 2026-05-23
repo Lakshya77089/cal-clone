@@ -18,6 +18,7 @@ type BookingForNotify = {
   attendeeName: string;
   attendeeEmail: string;
   attendeeTimezone: string;
+  guests: string[];
   startTime: Date;
   endTime: Date;
   eventType: {
@@ -83,7 +84,7 @@ async function sendBothSides(
     from_name: "Cal Clone",
   };
 
-  await Promise.all([
+  const sends = [
     sendTemplate({
       ...common,
       to_email: booking.attendeeEmail,
@@ -102,7 +103,20 @@ async function sendBothSides(
       when_text: whenAttendee, // shown in attendee's tz; OK for an assignment demo
       timezone: booking.attendeeTimezone,
     }),
-  ]);
+    ...booking.guests.map((guestEmail) =>
+      sendTemplate({
+        ...common,
+        to_email: guestEmail,
+        to_name: guestEmail,
+        reply_to: booking.eventType.user.email,
+        headline: variables.headlineAttendee,
+        when_text: whenAttendee,
+        timezone: booking.attendeeTimezone,
+      }),
+    ),
+  ];
+
+  await Promise.all(sends);
 }
 
 export async function notifyBookingCreated(bookingId: string): Promise<void> {

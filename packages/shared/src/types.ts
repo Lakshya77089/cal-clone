@@ -40,6 +40,7 @@ export type EventTypeDTO = {
   bufferBefore: number;
   bufferAfter: number;
   hidden: boolean;
+  position: number;
   createdAt: string;
 };
 
@@ -77,12 +78,17 @@ export type BookingDTO = {
   attendeeEmail: string;
   attendeeNotes: string | null;
   attendeeTimezone: string;
+  guests: string[];
   startTime: string; // ISO UTC
   endTime: string; // ISO UTC
   status: BookingStatus;
   createdAt: string;
   cancelledAt: string | null;
   cancelReason: string | null;
+  rescheduleReason: string | null;
+  rescheduledToId: string | null;
+  rescheduledFromId?: string | null;
+  wasRescheduled?: boolean;
 };
 
 export type PublicProfileDTO = {

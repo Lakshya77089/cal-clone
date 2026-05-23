@@ -46,6 +46,7 @@ model EventType {
   // but the direct booking link still works ("secret event type" semantics,
   // matching cal.com). Default false = listed.
   hidden          Boolean  @default(false)
+  position        Int      @default(0)
   createdAt       DateTime @default(now())
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -54,6 +55,7 @@ model EventType {
 
   @@unique([userId, slug])
   @@index([userId])
+  @@index([userId, position])
 }
 
 model Schedule {
@@ -110,12 +112,14 @@ model Booking {
   attendeeEmail    String
   attendeeNotes    String?
   attendeeTimezone String
+  guests           String[]      @default([])
   startTime        DateTime      @db.Timestamptz(6)
   endTime          DateTime      @db.Timestamptz(6)
   status           BookingStatus @default(CONFIRMED)
   createdAt        DateTime      @default(now())
   cancelledAt      DateTime?
   cancelReason     String?
+  rescheduleReason String?
   rescheduledToId  String?       @unique
 
   eventType      EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
