@@ -82,6 +82,8 @@ export const api = {
       request<EventTypeDTO>(`/event-types/${id}`, { method: "PATCH", body }),
     remove: (id: string) =>
       request<void>(`/event-types/${id}`, { method: "DELETE" }),
+    reorder: (ids: string[]) =>
+      request<void>("/event-types/reorder", { method: "POST", body: { ids } }),
   },
 
   schedules: {

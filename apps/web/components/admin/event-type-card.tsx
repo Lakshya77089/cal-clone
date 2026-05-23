@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, Copy, EyeOff, ExternalLink, MoreVertical, Trash2 } from "lucide-react";
+import { Clock, Copy, EyeOff, ExternalLink, GripVertical, MoreVertical, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,18 +21,40 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api, ApiError } from "@/lib/api";
+import {
+  useDeleteEventTypeMutation,
+  useUpdateEventTypeMutation,
+} from "@/lib/api/calApi";
 import type { EventTypeDTO } from "@cal/shared";
 
 export function EventTypeCard({
   eventType,
   username,
+  draggable,
+  isDragging,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
 }: {
   eventType: EventTypeDTO;
   username: string;
+  draggable?: boolean;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const [updateEt, updateState] = useUpdateEventTypeMutation();
+  const [deleteEt, deleteState] = useDeleteEventTypeMutation();
+  const pending = updateState.isLoading || deleteState.isLoading;
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Tracks the "Hidden" toggle locally for an optimistic UI. Same semantics
   // as cal.com: hidden=true hides from public profile, direct link still works.
@@ -56,34 +78,46 @@ export function EventTypeCard({
   const onToggleVisible = (visible: boolean) => {
     const nextHidden = !visible;
     setHidden(nextHidden);
-    startTransition(async () => {
-      try {
-        await api.eventTypes.update(eventType.id, { hidden: nextHidden });
-        router.refresh();
-      } catch (err) {
+    updateEt({ id: eventType.id, body: { hidden: nextHidden } })
+      .unwrap()
+      .catch((err) => {
         setHidden(!nextHidden);
-        toast.error(err instanceof ApiError ? err.message : "Failed to update");
-      }
-    });
+        toast.error(err?.data?.error ?? "Failed to update");
+      });
   };
 
   const onDelete = () => {
     startTransition(async () => {
       try {
-        await api.eventTypes.remove(eventType.id);
+        await deleteEt(eventType.id).unwrap();
         toast.success("Event type deleted");
         setConfirmDelete(false);
         router.refresh();
       } catch (err) {
-        toast.error(err instanceof ApiError ? err.message : "Failed to delete");
+        const e = err as { data?: { error?: string } };
+        toast.error(e?.data?.error ?? "Failed to delete");
       }
     });
   };
 
   return (
     <div
-      className={`flex items-center gap-4 bg-card px-6 py-5 transition-colors hover:bg-muted/40 ${hidden ? "opacity-60" : ""}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={`group flex items-center gap-2 bg-muted/80 px-4 py-5 transition-colors hover:bg-muted/50 ${isDragging ? "opacity-40" : ""} ${isDragOver ? "ring-2 ring-inset ring-primary/60" : ""}`}
     >
+      {draggable && (
+        <span
+          className="flex h-6 w-6 cursor-grab items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4" />
+        </span>
+      )}
       <Link href={`/event-types/${eventType.id}`} className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
           <h3 className="truncate text-sm font-semibold">{eventType.title}</h3>
@@ -91,18 +125,18 @@ export function EventTypeCard({
             /{username}/{eventType.slug}
           </span>
         </div>
-        {eventType.description && (
+        {/* {eventType.description && (
           <p className="mt-1.5 line-clamp-1 text-sm text-muted-foreground">
             {eventType.description}
           </p>
-        )}
+        )} */}
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted border border-white/10 px-1.5 py-0.5 text-xs font-medium text-white">
             <Clock className="h-3 w-3" />
             {eventType.durationMinutes}m
           </span>
           {hidden && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-500">
               <EyeOff className="h-3 w-3" />
               Hidden
             </span>

@@ -64,13 +64,13 @@ export function EventTypeForm({ mode, initial, schedules, username }: Props) {
     startTransition(async () => {
       try {
         if (mode === "create") {
-          const created = await api.eventTypes.create(body);
+          await api.eventTypes.create(body);
           toast.success("Event type created");
-          router.push(`/event-types/${created.id}`);
+          router.push("/event-types");
         } else if (initial) {
           await api.eventTypes.update(initial.id, body);
           toast.success("Saved");
-          router.refresh();
+          router.push("/event-types");
         }
       } catch (err) {
         toast.error(err instanceof ApiError ? err.message : "Failed to save");

@@ -1,45 +1,39 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/admin/page-header";
 import { EventTypeCard } from "@/components/admin/event-type-card";
 import { EventTypeListSkeleton } from "@/components/admin/list-skeleton";
-import { api, ApiError } from "@/lib/api";
+import {
+  useGetMeQuery,
+  useListEventTypesQuery,
+  useReorderEventTypesMutation,
+} from "@/lib/api/calApi";
 import type { EventTypeDTO } from "@cal/shared";
 
 export function EventTypesClient() {
-  const [eventTypes, setEventTypes] = useState<EventTypeDTO[] | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
+  const { data: me } = useGetMeQuery();
+  const { data: eventTypes, error, isLoading } = useListEventTypesQuery();
+  const [reorder] = useReorderEventTypesMutation();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [me, list] = await Promise.all([api.me(), api.eventTypes.list()]);
-        if (cancelled) return;
-        setUsername(me.username);
-        setEventTypes(list);
-      } catch (err) {
-        if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Could not reach the API");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [query, setQuery] = useState("");
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [overrideOrder, setOverrideOrder] = useState<EventTypeDTO[] | null>(null);
+  const previousOrderRef = useRef<EventTypeDTO[] | null>(null);
+
+  const list = overrideOrder ?? eventTypes ?? null;
 
   const filtered = useMemo(() => {
-    if (!eventTypes) return null;
+    if (!list) return null;
     const q = query.trim().toLowerCase();
-    if (!q) return eventTypes;
-    return eventTypes.filter((et) => {
+    if (!q) return list;
+    return list.filter((et) => {
       return (
         et.title.toLowerCase().includes(q) ||
         et.slug.toLowerCase().includes(q) ||
@@ -47,26 +41,86 @@ export function EventTypesClient() {
         `${et.durationMinutes}m`.includes(q)
       );
     });
-  }, [eventTypes, query]);
+  }, [list, query]);
 
   if (error) {
     return (
       <div>
-        <PageHeader title="Event Types" description="Couldn't reach the API." />
+        <PageHeader title="Event types" description="Couldn't reach the API." />
         <div className="rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
-          {error}
+          Could not load event types.
         </div>
       </div>
     );
   }
 
-  const totalCount = eventTypes?.length ?? 0;
+  const totalCount = list?.length ?? 0;
+  const isSearching = query.trim().length > 0;
+
+  const onDragStart = (id: string) => (e: React.DragEvent) => {
+    if (isSearching || !list) return;
+    setDragId(id);
+    previousOrderRef.current = list;
+    setOverrideOrder(list);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const onDragOver = (overId: string) => (e: React.DragEvent) => {
+    if (isSearching || !dragId || dragId === overId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverId(overId);
+  };
+
+  const onDragLeave = (overId: string) => () => {
+    if (dragOverId === overId) setDragOverId(null);
+  };
+
+  const onDrop = (overId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (isSearching || !dragId || !list || dragId === overId) {
+      setDragOverId(null);
+      return;
+    }
+    const fromIdx = list.findIndex((et) => et.id === dragId);
+    const toIdx = list.findIndex((et) => et.id === overId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = [...list];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setOverrideOrder(next);
+    setDragOverId(null);
+  };
+
+  const onDragEnd = () => {
+    const before = previousOrderRef.current;
+    const after = overrideOrder;
+    setDragId(null);
+    setDragOverId(null);
+    if (!before || !after) return;
+    const changed = before.some((et, i) => after[i]?.id !== et.id);
+    if (!changed) {
+      setOverrideOrder(null);
+      return;
+    }
+    reorder(after.map((et) => et.id))
+      .unwrap()
+      .then(() => setOverrideOrder(null))
+      .catch((err) => {
+        toast.error(
+          err?.data?.error ?? "Failed to save order",
+        );
+        setOverrideOrder(before);
+      });
+  };
 
   return (
-    <div>
+    <div className="font-sans">
       <PageHeader
-        title="Event Types"
-        description="Create events to share for people to book on your calendar."
+        title="Event types"
+        description="Configure different events for people to book on your calendar."
+        descriptionClassName="text-white"
         action={
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -75,20 +129,21 @@ export function EventTypesClient() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search"
-                className="h-9 w-48 pl-8"
+                className="h-9 w-48 rounded-xl pl-8 focus-visible:border-gray-400 focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-0"
                 disabled={totalCount === 0}
               />
             </div>
-            <Button asChild>
+            <Button className="rounded-xl" asChild>
               <Link href="/event-types/new">
-                <Plus className="mr-1 h-4 w-4" /> New
+                <Plus className="h-4 w-4 text-gray-600" />
+                New
               </Link>
             </Button>
           </div>
         }
       />
 
-      {eventTypes === null ? (
+      {isLoading || !list ? (
         <EventTypeListSkeleton />
       ) : totalCount === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
@@ -104,9 +159,21 @@ export function EventTypesClient() {
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+        <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border">
           {filtered!.map((et) => (
-            <EventTypeCard key={et.id} eventType={et} username={username ?? ""} />
+            <EventTypeCard
+              key={et.id}
+              eventType={et}
+              username={me?.username ?? ""}
+              draggable={!isSearching}
+              isDragging={dragId === et.id}
+              isDragOver={dragOverId === et.id}
+              onDragStart={onDragStart(et.id)}
+              onDragOver={onDragOver(et.id)}
+              onDragLeave={onDragLeave(et.id)}
+              onDrop={onDrop(et.id)}
+              onDragEnd={onDragEnd}
+            />
           ))}
         </div>
       )}

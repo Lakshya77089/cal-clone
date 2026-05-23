@@ -1,41 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/admin/page-header";
 import { ScheduleListSkeleton } from "@/components/admin/list-skeleton";
-import { api, ApiError } from "@/lib/api";
-import type { ScheduleDTO } from "@cal/shared";
+import { useListSchedulesQuery } from "@/lib/api/calApi";
 
 export function AvailabilityClient() {
-  const [schedules, setSchedules] = useState<ScheduleDTO[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const list = await api.schedules.list();
-        if (cancelled) return;
-        setSchedules(list);
-      } catch (err) {
-        if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Couldn't load schedules");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: schedules, error, isLoading } = useListSchedulesQuery();
 
   if (error) {
     return (
       <div>
         <PageHeader title="Availability" />
         <div className="rounded-lg border border-border bg-card p-8 text-sm text-muted-foreground">
-          {error}. Is the API running?
+          Couldn&rsquo;t load schedules. Is the API running?
         </div>
       </div>
     );
@@ -55,7 +35,7 @@ export function AvailabilityClient() {
         }
       />
 
-      {schedules === null ? (
+      {isLoading || !schedules ? (
         <ScheduleListSkeleton />
       ) : schedules.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
