@@ -12,9 +12,9 @@
 
 @layer base {
   :root {
-    --background: 0 0% 4%;          /* page bg, ~#0A0A0A */
+    --background: 0 0% 6%;          /* page bg, #0f0f0f */
     --foreground: 0 0% 96%;         /* primary text */
-    --card: 0 0% 7%;                /* surface bg, ~#121212 */
+    --card: 0 0% 9%;                /* surface bg, #171717 */
     --card-foreground: 0 0% 96%;
     --primary: 0 0% 100%;           /* primary button bg (white) */
     --primary-foreground: 0 0% 6%;  /* primary button text (near-black) */
@@ -39,5 +39,27 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     color-scheme: dark;
+  }
+  /* Pointer cursor on every interactive control. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="menuitem"],
+  [role="tab"],
+  a {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

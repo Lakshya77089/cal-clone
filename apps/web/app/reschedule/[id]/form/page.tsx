@@ -1,13 +1,19 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Calendar, Columns3, LayoutGrid } from "lucide-react";
-import { RescheduleClient } from "@/components/booking/reschedule-client";
+import { EventInfo } from "@/components/booking/event-info";
+import { RescheduleForm } from "@/components/booking/reschedule-form";
 import { api, ApiError } from "@/lib/api";
 
-export default async function ReschedulePage({
+export default async function RescheduleFormPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams: { slot?: string; tz?: string };
 }) {
+  const slot = searchParams.slot;
+  if (!slot) redirect(`/reschedule/${params.id}`);
+
   let booking;
   try {
     booking = await api.bookings.get(params.id);
@@ -20,6 +26,8 @@ export default async function ReschedulePage({
     booking.eventType.user.username,
     booking.eventType.slug,
   );
+
+  const viewerTimezone = searchParams.tz || booking.attendeeTimezone;
 
   return (
     <main className="relative min-h-screen bg-background">
@@ -44,12 +52,19 @@ export default async function ReschedulePage({
       </div>
 
       <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-        <div className="grid h-[520px] w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[240px_1fr_260px]">
-          <RescheduleClient
+        <div className="grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[260px_1fr]">
+          <EventInfo
             profile={profile}
-            bookingId={booking.id}
-            viewerTimezone={booking.attendeeTimezone}
+            viewerTimezone={viewerTimezone}
+            startTime={slot}
             formerStartTime={booking.startTime}
+          />
+          <RescheduleForm
+            bookingId={booking.id}
+            startTime={slot}
+            viewerTimezone={viewerTimezone}
+            defaultName={booking.attendeeName}
+            defaultEmail={booking.attendeeEmail}
           />
         </div>
         <p className="mt-6 text-sm text-muted-foreground">Cal.com</p>

@@ -1,40 +1,39 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { EventInfo } from "@/components/booking/event-info";
 import { BookingPicker } from "@/components/booking/booking-picker";
-import { api, ApiError } from "@/lib/api";
 import type { PublicProfileDTO } from "@cal/shared";
 
 export function RescheduleClient({
   profile,
   bookingId,
   viewerTimezone,
+  formerStartTime,
 }: {
   profile: PublicProfileDTO;
   bookingId: string;
   viewerTimezone: string;
+  formerStartTime?: string;
 }) {
   const router = useRouter();
 
-  const onPick = async (isoStart: string) => {
-    try {
-      const created = await api.bookings.reschedule(bookingId, { startTime: isoStart });
-      toast.success("Rescheduled");
-      router.push(`/booking/${created.id}`);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to reschedule");
-    }
+  const onPick = (isoStart: string) => {
+    router.push(
+      `/reschedule/${bookingId}/form?slot=${encodeURIComponent(isoStart)}&tz=${encodeURIComponent(viewerTimezone)}`,
+    );
   };
 
   return (
     <>
-      <EventInfo profile={profile} viewerTimezone={viewerTimezone} />
+      <EventInfo
+        profile={profile}
+        viewerTimezone={viewerTimezone}
+        formerStartTime={formerStartTime}
+      />
       <BookingPicker
         profile={profile}
         viewerTimezone={viewerTimezone}
         onPickSlot={onPick}
-        pickButtonLabel="Reschedule to this time"
       />
     </>
   );

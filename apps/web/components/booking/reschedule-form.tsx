@@ -7,75 +7,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateBookingMutation } from "@/lib/api/calApi";
-import { CreateBookingSchema, type PublicProfileDTO } from "@cal/shared";
+import { useRescheduleBookingMutation } from "@/lib/api/calApi";
 
-type FieldErrors = {
-  attendeeName?: string;
-  attendeeEmail?: string;
-  attendeeNotes?: string;
-  guests?: Record<number, string>;
-};
-
-export function BookingForm({
-  profile,
+export function RescheduleForm({
+  bookingId,
   startTime,
   viewerTimezone,
+  defaultName,
+  defaultEmail,
 }: {
-  profile: PublicProfileDTO;
+  bookingId: string;
   startTime: string;
   viewerTimezone: string;
+  defaultName: string;
+  defaultEmail: string;
 }) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [notes, setNotes] = useState("");
+  const [name] = useState(defaultName);
+  const [email] = useState(defaultEmail);
+  const [reason, setReason] = useState("");
   const [guests, setGuests] = useState<string[] | null>(null);
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [createBooking, createState] = useCreateBookingMutation();
-  const submitting = createState.isLoading;
+  const [reschedule, reschState] = useRescheduleBookingMutation();
+  const submitting = reschState.isLoading;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanGuests = (guests ?? [])
-      .map((g) => g.trim())
-      .filter((g) => g.length > 0);
-    const payload = {
-      eventTypeId: profile.eventType.id,
-      startTime,
-      attendeeName: name.trim(),
-      attendeeEmail: email.trim(),
-      attendeeNotes: notes.trim() || null,
-      attendeeTimezone: viewerTimezone,
-      guests: cleanGuests,
-    };
-
-    const parsed = CreateBookingSchema.safeParse(payload);
-    if (!parsed.success) {
-      const next: FieldErrors = {};
-      for (const issue of parsed.error.issues) {
-        const path = issue.path[0];
-        if (path === "attendeeName") next.attendeeName = issue.message;
-        else if (path === "attendeeEmail") next.attendeeEmail = issue.message;
-        else if (path === "attendeeNotes") next.attendeeNotes = issue.message;
-        else if (path === "guests") {
-          const idx = issue.path[1];
-          if (typeof idx === "number") {
-            next.guests = { ...(next.guests ?? {}), [idx]: issue.message };
-          }
-        }
-      }
-      setErrors(next);
-      return;
-    }
-
-    setErrors({});
     try {
-      const booking = await createBooking(parsed.data).unwrap();
-      router.push(`/booking/${booking.id}`);
+      const created = await reschedule({
+        id: bookingId,
+        body: { startTime, reason: reason.trim() || null },
+      }).unwrap();
+      router.push(`/booking/${created.id}`);
     } catch (err) {
       const e = err as { data?: { error?: string } };
-      toast.error(e?.data?.error ?? "Failed to book");
+      toast.error(e?.data?.error ?? "Failed to reschedule");
     }
   };
 
@@ -95,62 +60,30 @@ export function BookingForm({
     });
   };
 
-  const onBack = () => {
-    router.push(
-      `/${profile.user.username}/${profile.eventType.slug}?tz=${encodeURIComponent(viewerTimezone)}`,
-    );
-  };
-
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5 p-6">
       <div className="space-y-2">
         <Label htmlFor="name" className="text-sm font-semibold">
-          Your name <span className="text-foreground">*</span>
+          Your name
         </Label>
         <Input
           id="name"
-          required
-          maxLength={120}
-          autoComplete="name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="bg-background"
+          disabled
+          className="bg-background text-muted-foreground"
         />
-        {errors.attendeeName && (
-          <p className="text-xs text-destructive">{errors.attendeeName}</p>
-        )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="email" className="text-sm font-semibold">
-          Email address <span className="text-foreground">*</span>
+          Email address
         </Label>
         <Input
           id="email"
           type="email"
-          required
-          autoComplete="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="bg-background"
-        />
-        {errors.attendeeEmail && (
-          <p className="text-xs text-destructive">{errors.attendeeEmail}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes" className="text-sm font-semibold">
-          Additional notes
-        </Label>
-        <Textarea
-          id="notes"
-          rows={3}
-          maxLength={2000}
-          placeholder="Please share anything that will help prepare for our meeting."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          className="resize-none bg-background"
+          disabled
+          className="bg-background text-muted-foreground"
         />
       </div>
 
@@ -183,9 +116,6 @@ export function BookingForm({
               >
                 <X className="h-3.5 w-3.5" />
               </button>
-              {errors.guests?.[idx] && (
-                <p className="mt-1 text-xs text-destructive">{errors.guests[idx]}</p>
-              )}
             </div>
           ))}
           <button
@@ -200,6 +130,21 @@ export function BookingForm({
         </div>
       )}
 
+      <div className="space-y-2">
+        <Label htmlFor="reason" className="text-sm font-semibold">
+          Reason for reschedule
+        </Label>
+        <Textarea
+          id="reason"
+          rows={3}
+          maxLength={2000}
+          placeholder="Let others know why you need to reschedule"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="resize-none bg-background"
+        />
+      </div>
+
       <p className="text-xs text-muted-foreground">
         By proceeding, you agree to Cal.com&rsquo;s{" "}
         <a href="#" className="font-medium text-foreground underline-offset-2 hover:underline">
@@ -213,13 +158,20 @@ export function BookingForm({
       </p>
 
       <div className="flex justify-end gap-2 pt-1">
-        <Button type="button" variant="ghost" onClick={onBack} disabled={submitting}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.back()}
+          disabled={submitting}
+        >
           Back
         </Button>
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Confirming…" : "Confirm"}
+          {submitting ? "Rescheduling…" : "Reschedule"}
         </Button>
       </div>
+
+      <input type="hidden" value={viewerTimezone} readOnly aria-hidden="true" />
     </form>
   );
 }
