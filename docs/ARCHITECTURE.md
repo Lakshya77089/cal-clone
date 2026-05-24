@@ -125,78 +125,163 @@ cal/
 ├── apps/
 │   ├── api/                        # Express + Prisma backend
 │   │   ├── src/
-│   │   │   ├── index.ts            # express app, cors, mounts routers
+│   │   │   ├── index.ts            # express app boot (cors, mounts routers)
+│   │   │   ├── app.ts              # createApp() — composes routers + middleware
 │   │   │   ├── db.ts               # prisma client singleton
 │   │   │   ├── routes/
-│   │   │   │   ├── eventTypes.ts   # GET/POST/PATCH/DELETE /event-types
+│   │   │   │   ├── eventTypes.ts   # GET/POST/PATCH/DELETE + POST /reorder
 │   │   │   │   ├── schedules.ts    # /schedules (+ rules + overrides)
-│   │   │   │   ├── bookings.ts     # /bookings (list, cancel, reschedule)
+│   │   │   │   ├── bookings.ts     # /bookings (list, get, create, cancel, reschedule)
 │   │   │   │   ├── slots.ts        # GET /slots?eventTypeId=...&from=...&to=...
-│   │   │   │   └── public.ts       # GET /public/:username/:slug — booking page data
+│   │   │   │   ├── publicProfile.ts# GET /public/:username/:slug
+│   │   │   │   └── me.ts           # GET /me — current single user
 │   │   │   ├── services/
-│   │   │   │   ├── availability.ts # getAvailableSlots() — the core algorithm
-│   │   │   │   └── booking.ts      # createBooking()/cancelBooking() — transactional
+│   │   │   │   ├── availability.ts # getAvailableSlots() — slot algorithm
+│   │   │   │   ├── booking.ts      # create/cancel/reschedule — transactional
+│   │   │   │   └── notifications.ts# EmailJS fan-out to attendee, host, guests
 │   │   │   ├── lib/
 │   │   │   │   ├── time.ts         # date-fns-tz wrappers
-│   │   │   │   └── errors.ts       # HttpError, error middleware
+│   │   │   │   ├── errors.ts       # HttpError, error middleware
+│   │   │   │   ├── slug.ts         # slug derivation + uniqueness
+│   │   │   │   ├── email.ts        # thin EmailJS REST wrapper
+│   │   │   │   └── currentUser.ts  # resolves the single seeded host
 │   │   │   └── middleware/
-│   │   │       └── validate.ts     # zod request body validator
+│   │   │       ├── validate.ts     # zod request body validator
+│   │   │       └── errorHandler.ts # central JSON error response
 │   │   ├── prisma/
 │   │   │   ├── schema.prisma
+│   │   │   ├── migrations/         # versioned SQL migrations
 │   │   │   └── seed.ts
+│   │   ├── tests/                  # unit / module / integration (vitest)
 │   │   ├── package.json
-│   │   └── tsconfig.json
+│   │   └── vitest.config.ts
 │   │
 │   └── web/                        # Next.js 14 App Router frontend
 │       ├── app/
 │       │   ├── (admin)/            # grouped admin layout w/ sidebar
-│       │   │   ├── event-types/{page, new/page, [id]/page}.tsx
-│       │   │   ├── availability/{page, [id]/page}.tsx
-│       │   │   └── bookings/page.tsx
-│       │   ├── [username]/[eventSlug]/   # public booking, no auth
-│       │   │   ├── page.tsx              # calendar + slots
-│       │   │   ├── book/page.tsx         # form (after slot pick)
-│       │   │   └── success/[bookingId]/page.tsx
-│       │   └── layout.tsx
+│       │   │   ├── layout.tsx
+│       │   │   ├── event-types/{page, [id]/page, new/page}.tsx
+│       │   │   │            + event-types-client.tsx  (RTK Query)
+│       │   │   ├── availability/{page, [id]/page, new/page}.tsx
+│       │   │   │            + availability-client.tsx (RTK Query)
+│       │   │   └── bookings/{page, bookings-client}.tsx (RTK Query)
+│       │   ├── [username]/                  # public profile
+│       │   │   ├── page.tsx
+│       │   │   ├── loading.tsx              # skeleton
+│       │   │   └── [eventSlug]/             # public booking
+│       │   │       ├── page.tsx             # calendar + slots
+│       │   │       ├── loading.tsx
+│       │   │       └── book/page.tsx        # attendee form
+│       │   ├── booking/[id]/                # confirmation
+│       │   │   ├── page.tsx                 # RSC fetch
+│       │   │   ├── booking-detail-client.tsx# inline cancel + cal links
+│       │   │   └── loading.tsx
+│       │   ├── reschedule/[id]/
+│       │   │   ├── page.tsx                 # picker w/ former-time strikethrough
+│       │   │   ├── form/page.tsx            # reschedule reason form
+│       │   │   └── loading.tsx
+│       │   ├── not-found.tsx                # chrome-style dino game on 404
+│       │   ├── layout.tsx
+│       │   └── globals.css
 │       ├── components/
-│       │   ├── ui/                 # shadcn generated
-│       │   ├── admin/              # Sidebar, EventTypeCard, ScheduleEditor, BookingRow
-│       │   ├── booking/            # CalendarPicker, TimeSlotList, BookingForm
-│       │   └── shared/             # TimezonePicker, etc.
+│       │   ├── ui/                 # shadcn primitives
+│       │   ├── admin/              # sidebar, event-type-card, booking-list, ...
+│       │   ├── booking/            # event-info, booking-picker, *-form, reschedule-client
+│       │   ├── dino-game.tsx       # 404 game (canvas)
+│       │   ├── navigation-progress.tsx  # top-of-page progress bar on link clicks
+│       │   └── providers.tsx       # <ReduxProvider> + <NavigationProgress />
 │       ├── lib/
-│       │   ├── api.ts              # typed fetch wrapper (server + client safe)
-│       │   └── constants.ts
+│       │   ├── api.ts              # legacy typed fetch wrapper (used by RSCs)
+│       │   ├── api/
+│       │   │   └── calApi.ts       # RTK Query — one createApi for all endpoints
+│       │   ├── slices/
+│       │   │   └── uiSlice.ts      # small UI slice (sidebar, 12h/24h pref)
+│       │   ├── store.ts            # configureStore + typed hooks
+│       │   └── utils.ts            # cn() helper
 │       ├── package.json
-│       └── next.config.js
+│       └── next.config.mjs
 │
 ├── packages/
 │   └── shared/                     # types + zod schemas shared between web & api
 │       ├── src/
-│       │   ├── schemas.ts          # zod for EventType, Booking, Schedule, etc.
-│       │   └── types.ts            # exported TS types inferred from zod
+│       │   ├── schemas.ts          # zod for EventType, Booking, Schedule, ...
+│       │   └── types.ts            # DTOs (BookingDTO has wasRescheduled flag, ...)
 │       └── package.json
 │
+├── deploy.ps1                      # local one-shot push + ssh deploy helper
 ├── package.json                    # workspaces root, "dev": concurrently both apps
-├── pnpm-workspace.yaml             # or npm workspaces — see below
 └── README.md
 ```
 
 **Workspace tool trade-off:** pnpm vs npm workspaces. pnpm is faster and stricter, but the evaluator may not have it installed. **Use npm workspaces** — works out of the box with `npm install` at root, no extra prerequisite in setup instructions.
 
-The boundary that matters: **Express route handlers stay thin and call `services/`.** Business logic (availability math, conflict checks) is testable in isolation without HTTP.
+The boundary that matters: **Express route handlers stay thin and call `services/`.** Business logic (availability math, conflict checks, reschedule-chain walking) is testable in isolation without HTTP.
 
 ---
 
 ## 7. UI implementation strategy (per Cal.com research)
 
-- shadcn components: `Button`, `Input`, `Textarea`, `Select`, `Switch`, `Tabs`, `Dialog`, `Sheet`, `Form`, `Calendar`, `DropdownMenu`, `Toast` (Sonner).
-- Layout: light gray app bg (`bg-gray-50`), white content cards (`bg-white border border-gray-200 rounded-2xl shadow-sm`).
-- Color: gray-900 primary, gray-50/100/200 surfaces, true white. No accent color (matches Cal's monochrome aesthetic).
-- Font: Inter via `next/font/google`.
-- Admin sidebar: `w-64` fixed, full-height, with icon+label nav. Active state `bg-gray-100`.
-- Public booking page: three-pane card on `bg-gray-50` background, max-w-5xl centered, exactly mirroring Cal.com's signature layout.
-- Date picker: shadcn `Calendar` (built on react-day-picker, which date-fns powers) — with custom `modifiers` to dot available dates and disable unavailable ones.
-- Time slot "expand to confirm" interaction: stateful list where the clicked slot becomes a two-button row.
+- shadcn components: `Button`, `Input`, `Textarea`, `Select`, `Switch`, `Tabs`, `Dialog`, `Form`, `DropdownMenu`, `Toast` (Sonner). The shadcn `Calendar` was replaced with a custom canvas-friendly grid (`booking-picker.tsx`) once we needed availability-aware date cells with stable styling.
+- **Theme:** dark by default. Page bg `#0f0f0f` (`--background`), surfaces `#171717` (`--card`), borders `hsl(0 0% 16%)`, primary white-on-black. Matches the current cal.com dark mode.
+- **Font:** Inter via `next/font/google`. Tailwind exposes both `font-sans` and `font-heading` (same Inter today; swap point if a display font is added later).
+- **Admin sidebar:** fixed-width, icon+label nav (`Link` icon for Event types, `CalendarRange` for Bookings, `Clock` for Availability). Active state `bg-muted`.
+- **Public booking page:** three-pane card (event info / month calendar / scrollable time slots), fixed-height so only the slot column scrolls. Calendar dates use a solid muted fill on available days, white-on-black on selection. Slot pills are rounded-lg buttons with a green dot indicator; clicking routes straight to `/book` instead of expanding inline (matches cal.com).
+- **Time-slot interaction:** single click → navigate. The earlier "expand to two-button confirm" interaction was removed because cal.com itself navigates immediately.
+- **Loading states:** Next.js `loading.tsx` siblings for every server-rendered route (`[username]`, `[username]/[eventSlug]`, `booking/[id]`, `reschedule/[id]`, `reschedule/[id]/form`) render skeletons that match the real layout, so the transition doesn't visually jump.
+- **Navigation progress:** a top-of-page 0.5px bar (`components/navigation-progress.tsx`) appears on every internal link click and finishes when the destination route mounts. Intercepts anchor clicks at the document level; uses `usePathname()` + `useSearchParams()` to detect the route change.
+- **404 page:** `app/not-found.tsx` renders a chrome-style pixel-art dino game (`components/dino-game.tsx`) — canvas-based, jump physics, persistent high score in `localStorage`.
+
+---
+
+## 7a. Client-side state management
+
+Originally there was no global store — every client component fetched via `lib/api.ts` + `useEffect`. That stayed honest but didn't show off any data-layer thinking, so the codebase now uses:
+
+- **Redux Toolkit + RTK Query** (`lib/store.ts`, `lib/api/calApi.ts`) as the single client data layer. One `createApi` covers every endpoint; mutation results invalidate query tags (`EventType`, `Booking`, `Schedule`, `Slots`) so the relevant lists auto-refetch without manual orchestration.
+- **A small UI slice** (`lib/slices/uiSlice.ts`) for transient prefs (sidebar collapsed, 12h/24h). Real Redux state — not just RTK Query cache — so the slice pattern is in the codebase.
+- **Server components (RSCs) still use `lib/api.ts`** because hooks aren't available there. The two paths coexist: RSCs handle non-interactive routes (booking detail, reschedule picker), client components use hooks (event-types list, bookings list, public picker).
+
+**Trade-off:** RTK Query adds ~30 KB to the bundle (event-types page first-load went from 186 B → 11.9 kB after the migration). For a real cal.com clone the cache + invalidation + de-duped fetches earn that back many times over. For this single-user assignment it's mild over-engineering, but it's a fair reflection of how production schedulers actually structure their data layer.
+
+**Why not React Query (TanStack):** RTK Query bundles the store + cache + middleware in one library, which keeps the dependency footprint smaller for an app that already wants a Redux slice. Both would have been defensible.
+
+---
+
+## 7b. Validation: one Zod, two places
+
+- **Server-side**: every `validateBody()` middleware parses the request body through the shared `CreateBookingSchema` / `UpdateEventTypeSchema` / etc. from `packages/shared/src/schemas.ts`. Failures return a structured 400 with field paths.
+- **Client-side**: the booking form runs the **same schema** via `CreateBookingSchema.safeParse(payload)` before calling the mutation. On failure, errors are mapped to per-field state and rendered inline. No wasted server round-trips for plainly-invalid input.
+
+Single source of truth — if the schema gains a `phone` field tomorrow, both sides pick it up from one edit.
+
+---
+
+## 7c. Drag-to-reorder event types
+
+`EventType.position Int @default(0)` plus a dedicated `POST /event-types/reorder` route that accepts `{ ids: string[] }` and applies them in a transaction. The client uses native HTML5 drag-and-drop (no `dnd-kit` dependency — too heavy for a single list). Optimistic UI: the parent owns an `overrideOrder` state that mirrors the dragged sequence; on `dragend` it diffs against the pre-drag snapshot and only POSTs if order actually changed. On API failure the previous order is restored and a toast fires.
+
+**Why a separate route, not PATCH on each row:** a single transaction guarantees the list is consistent. N PATCH calls would let partial failures leave bookings half-reordered.
+
+---
+
+## 7d. Booking guests + email fan-out
+
+`Booking.guests String[]` stores additional attendee emails. On `createBooking()` the array is normalised via `dedupedGuests()` (trim, lowercase-dedup, exclude the primary attendee email to avoid self-CC). On every booking lifecycle event (created / cancelled / rescheduled) the `notifications` service sends one EmailJS template per recipient — attendee, host, *each guest* — instead of relying on BCC headers (EmailJS REST doesn't support BCC). Sends run in `Promise.all` then `fireAndForget` so a failing notification can never abort the booking write.
+
+**Trade-off:** EmailJS limits free tier to 200 emails / month. For a real product you'd swap to Postmark/Resend with a single send that includes BCC. The interface (`sendTemplate(params)`) is intentionally narrow so the swap is a one-file change.
+
+---
+
+## 7e. Reschedule chains
+
+When a booking is rescheduled, the old row goes to `status = RESCHEDULED` (audit trail) and a new CONFIRMED row is created, linked via `Booking.rescheduledToId` (unique). The new row also carries a `rescheduleReason` and inherits the original `guests`.
+
+This creates **chains** when a booking gets rescheduled multiple times (`A → B → C`). The UI surfaces them per cal.com:
+- The terminal CONFIRMED booking shows in **Upcoming** with a "Rescheduled" badge.
+- Every RESCHEDULED ancestor shows in **Cancelled** with the same badge.
+- **Exception:** if the terminal becomes CANCELLED later, all RESCHEDULED ancestors are hidden — only the cancelled tail shows, because a dead chain shouldn't render N+1 cards.
+
+The flag lives on the API response as `wasRescheduled: boolean`. The list route walks the chain with a depth-bounded loop (32 hops, defensive against cycles) to compute the terminal status and decide whether to include each ancestor.
 
 ---
 
@@ -218,19 +303,22 @@ The boundary that matters: **Express route handlers stay thin and call `services
 - Reschedule flow (cancel + create under the hood).
 - README with schema diagram + setup + assumptions + both deploy URLs, responsive tweaks, deploy to Vercel + Render + Neon.
 
-**Bonus features included** (user-confirmed): multiple availability schedules, date overrides, reschedule flow. Buffer time stays in the schema and is honored by `getAvailableSlots()` but won't get its own dedicated UI (configurable from the EventType "Limits" tab, matching Cal.com).
-**Bonus features skipped**: email notifications (needs SMTP, time sink), custom booking questions (extra schema + UI), responsive mobile polish kept to "doesn't break" not "perfect".
+**Bonus features included** (user-confirmed): multiple availability schedules, date overrides, reschedule flow with reasons, multi-step reschedule chains, drag-to-reorder event types, guest emails, booking-lifecycle email notifications via EmailJS, dino game on 404. Buffer time stays in the schema and is honored by `getAvailableSlots()` but doesn't get its own UI tab.
+**Bonus features skipped**: custom booking questions (extra schema + dynamic form), responsive mobile polish kept to "doesn't break" not "pixel-perfect", real video conferencing (location renders as "Cal Video" but no link is generated).
 
 ---
 
 ## 9. Deployment
 
-- **Frontend (apps/web) → Vercel.** Free, native Next.js host. Env var: `NEXT_PUBLIC_API_URL` (the public Render URL of the API) plus `INTERNAL_API_URL` (same value in this setup — they only diverge if API is on a private network, which Render free tier isn't).
-- **Backend (apps/api) → Render Web Service.** Free tier, supports Node, persistent enough for the demo. Build cmd: `npm install && npm run build -w apps/api`; start cmd: `npm run start -w apps/api`. Env vars: `DATABASE_URL`, `DIRECT_URL`, `WEB_ORIGIN` (the Vercel URL, for CORS).
-- **Database → Neon Postgres** (user-confirmed). `DATABASE_URL` is the pooled connection (used at runtime), `DIRECT_URL` is the direct connection (used by `prisma migrate`).
-- **Trade-off — Render free tier cold starts (~30s on first request after inactivity).** Acceptable for an evaluator who will hit the URL and wait; documented in README. Alternative: deploy API to Railway (no cold starts but free tier is more limited time-wise). Render chosen for simpler "free forever" story during evaluation window.
-- After first deploy: SSH into Render shell (or run locally pointed at production `DATABASE_URL`) → `npm run seed -w apps/api` once to populate the default user, sample schedules, sample event types, and a few bookings.
-- Submission lists **two URLs**: the Vercel web URL (primary) and the Render API URL (so the evaluator can hit `GET /health` to verify the backend independently).
+- **Self-hosted on a Vultr VPS** at `cal.lakshyasharma.me` (frontend) and `api.lakshyasharma.me` (backend). One VM runs both apps under `pm2` (`cal-web` and `cal-api`); **nginx** terminates TLS (Let's Encrypt via Certbot, auto-renewing) and reverse-proxies each subdomain to the matching pm2 process on `localhost`.
+- **No cold starts.** The original plan targeted Vercel (frontend) + Render free tier (backend) + Neon (DB) — the Render free tier sleeps after 15 min, so the first request took ~30s. Moving both apps onto Vultr eliminated that latency entirely; the API is always warm.
+- **Database → Neon Postgres** (unchanged). `DATABASE_URL` is the pooled connection (used at runtime), `DIRECT_URL` is the direct connection (used by `prisma migrate`).
+- **Deploy script** (`~/deploy.sh` on the server) does `git pull && npm install && npx prisma migrate deploy && npm run build && pm2 restart cal-api && cd ../web && npm install && npm run build && pm2 restart cal-web`. From the laptop, `./deploy.ps1` pushes + SSHes + runs it.
+- **First deploy**: ran `npm run seed -w apps/api` once against Neon to populate the demo user, three sample schedules, four event types, and a couple of bookings.
+- **CORS**: `WEB_ORIGIN=https://cal.lakshyasharma.me` on the API (`apps/api/.env`); the API responds with `Access-Control-Allow-Origin` only for that origin.
+- **EmailJS**: `EMAILJS_SERVICE_ID/TEMPLATE_ID/PUBLIC_KEY/PRIVATE_KEY` env vars on the API; if any is missing the notifications service no-ops silently so bookings still work without email setup.
+- **DNS layout**: `cal` → frontend, `api` → backend (both A records → `139.84.222.82`). Root `lakshyasharma.me` 301-redirects to `cal.lakshyasharma.me`.
+- Submission lists the **single live URL** `https://cal.lakshyasharma.me`; `https://api.lakshyasharma.me/health` is documented in the README for grading-time backend verification.
 
 ---
 
